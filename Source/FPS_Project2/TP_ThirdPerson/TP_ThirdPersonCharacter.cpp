@@ -133,6 +133,9 @@ void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATP_ThirdPersonCharacter::Fire);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ATP_ThirdPersonCharacter::StopFire);
+	
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ATP_ThirdPersonCharacter::CrouchCharacter);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ATP_ThirdPersonCharacter::StopCrouchCharacter);
 
 	PlayerInputComponent->BindAction("Cover", IE_Pressed, this, &ATP_ThirdPersonCharacter::ToggleCover);
 	
@@ -317,12 +320,14 @@ void ATP_ThirdPersonCharacter::FireFromWeapon() {
 	if (bHit) {
 		//DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 3.0f);
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Arsenal[ActiveWeapon].HitEFX, Hit.ImpactPoint);
+		UGameplayStatics::PlaySound2D(this, Arsenal[ActiveWeapon].SoundEFX, 1.0f, 1.0f, 0);
 		// AEnemy* HitActor = Cast<AEnemy>(Hit.GetActor());
 
 		// if (HitActor) {
 		// 	HitActor->GetHealthComponent()->GetDamage(Arsenal[ActiveWeapon].Damage);
 		// }
 	}
+	
 }
 
 void ATP_ThirdPersonCharacter::AutomaticFire(float DeltaTime) {
@@ -409,10 +414,15 @@ bool ATP_ThirdPersonCharacter::CheckAroundMe(float Radius) {
 // Mechanic: Reload
 
 void ATP_ThirdPersonCharacter::ReloadWeapon() {
+	if(MagBullets == Arsenal[ActiveWeapon].MagCapacity || bIsReloading)
+	{
+		return;
+	}
 	if (!bIsUsingArch) {
 		GEngine->AddOnScreenDebugMessage(-1, 5.2f, FColor::Red, TEXT("Start Reload!"));
 		bIsReloading = true;
 		OnCharacterStartReload.Broadcast();
+		//EndReload();
 	}
 }
 
